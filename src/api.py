@@ -1,13 +1,17 @@
 """ Punto de entrada de la API"""
 
-from fastapi import FastAPI
+import os
+import shutil
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from mongo import MongoManager
+from MoviePlatform_Backend.src.mongo import MongoManager
 
+
+IMAGES_FOLDER = 'MoviePlatform_Backend/images'
 class Movie(BaseModel):
     id: Optional[str] = None
     title:str
@@ -59,3 +63,15 @@ def post_movie(film:Movie) -> bool:
 @app.delete("/movies/{_id}")
 def delete_movie(_id:str) -> bool:
     return MongoManager.delete_movie(_id)
+
+@app.post("/upload")
+def upload(file: UploadFile = File(...)):
+    try:
+        with open(os.path.join(IMAGES_FOLDER, file.filename), 'wb') as f:
+            shutil.copyfileobj(file.file, f)
+    except Exception:
+        return {"message": "There was an error uploading the file"}
+    finally:
+        file.file.close()
+        
+    return {"message": f"Successfully uploaded {file.filename}"}
