@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from MoviePlatform_Backend.src.mongo import MongoManager
+from src.mongo import MongoManager
 
 
 IMAGES_FOLDER = 'MoviePlatform_Backend/images'
@@ -18,12 +18,14 @@ class Movie(BaseModel):
     director:str
     year:int = Field(min=1845)
     score:int = Field(min=1, max=5)
+    preview:str
 
 class MovieUpdate(BaseModel):
     title:str
     director:str
     year:int
     score:int
+    preview:str
 
 origins = [
     "http://localhost:5173"
@@ -54,10 +56,12 @@ def get_movie(title:str=None, director:str=None, year:int=None, score:int=None) 
 
 @app.put("/movies/{_id}")
 def put_movie(_id:str, film: MovieUpdate) -> bool:
-    return MongoManager.update_movie(_id, film.title, film.director, film.year, film.score)
+    return MongoManager.update_movie(_id, film.title, film.director, film.year, film.score. os.join(IMAGES_FOLDER, film.preview))
 
 @app.post("/movies/")
 def post_movie(film:Movie) -> bool:
+    if film.preview:
+        return MongoManager.insert_movie(film.title, film.director, film.year, film.score, os.join(IMAGES_FOLDER, film.preview)) 
     return MongoManager.insert_movie(film.title, film.director, film.year, film.score)
 
 @app.delete("/movies/{_id}")
@@ -73,5 +77,4 @@ def upload(file: UploadFile = File(...)):
         return {"message": "There was an error uploading the file"}
     finally:
         file.file.close()
-        
     return {"message": f"Successfully uploaded {file.filename}"}
