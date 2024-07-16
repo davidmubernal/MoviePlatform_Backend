@@ -7,12 +7,13 @@ from bson import ObjectId
 MONGO_COLLECTION = 'movies'
 
 class MongoManager():
-    MONGO_URL = "mongodb://localhost:27017/"
+    MONGO_URL = "mongoDB:27017" # Production
+    # MONGO_URL = "localhost:30017" # Local and Test
     MONGO_DB_NAME = "MoviePlatform"
     db: MongoClient
 
     def __init__(self) -> None:
-        client = MongoClient(self.MONGO_URL)
+        client = MongoClient(host=self.MONGO_URL)
         self.db = client[self.MONGO_DB_NAME]
 
     def valid_collection(self, collection):
@@ -35,9 +36,9 @@ class MongoManager():
             return movies
         query = {}
         if title:
-            query['title'] = {'$regex': title}
+            query['title'] = {'$regex': title, '$options':'i'}
         if director:
-            query['director'] = {'$regex': director}
+            query['director'] = {'$regex': director, '$options':'i'}
         if year:
             query['year'] = year
         if score:

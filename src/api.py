@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from mongo import MongoManager
+from src.mongo import MongoManager
 
 class Movie(BaseModel):
     id: Optional[str] = None
@@ -22,7 +22,8 @@ class MovieUpdate(BaseModel):
     score:int
 
 origins = [
-    "http://localhost:5173"
+    "http://localhost:30080",
+    "http://localhost:30080/*"
 ]
 
 app = FastAPI()
@@ -33,12 +34,16 @@ app.add_middleware(
     allow_methods=["GET","POST","DELETE","PUT"],
     allow_headers=["*"]
                    )
+app.openapi_tags = [ {
+        "name": "Movies",
+        "description": "Operations with movies.",
+    }]
 
-@app.get("/movies")
+@app.get("/movies", tags=["Movies"])
 def get_movies() -> List[Movie]:
     return MongoManager.find_movies()
 
-@app.get("/movies/")
+@app.get("/movies/", tags=["Movies"])
 def get_movie(title:str=None, director:str=None, year:int=None, score:int=None) -> List[Movie]:
     movies = []
     for movie in MongoManager.find_movies(title=title, director=director, year=year, score=score):
@@ -48,14 +53,14 @@ def get_movie(title:str=None, director:str=None, year:int=None, score:int=None) 
         movies.append(_movie)
     return movies
 
-@app.put("/movies/{_id}")
+@app.put("/movies/{_id}", tags=["Movies"])
 def put_movie(_id:str, film: MovieUpdate) -> bool:
     return MongoManager.update_movie(_id, film.title, film.director, film.year, film.score)
 
-@app.post("/movies/")
+@app.post("/movies/", tags=["Movies"])
 def post_movie(film:Movie) -> bool:
     return MongoManager.insert_movie(film.title, film.director, film.year, film.score)
 
-@app.delete("/movies/{_id}")
+@app.delete("/movies/{_id}", tags=["Movies"])
 def delete_movie(_id:str) -> bool:
     return MongoManager.delete_movie(_id)
