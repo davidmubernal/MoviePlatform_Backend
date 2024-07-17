@@ -1,15 +1,18 @@
 """ Paquete para la conexion con la base de datos de mongo """
+import os
 from pymongo import MongoClient
 from bson import ObjectId
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # from encoder import JSONEncoder
 
-MONGO_COLLECTION = 'movies'
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 
 class MongoManager():
-    MONGO_URL = "mongoDB:27017" # Production
-    # MONGO_URL = "localhost:30017" # Local and Test
-    MONGO_DB_NAME = "MoviePlatform"
+    MONGO_URL = os.getenv("MONGO_URL")
+    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
     db: MongoClient
 
     def __init__(self) -> None:
@@ -48,6 +51,7 @@ class MongoManager():
 
     @staticmethod
     def update_movie(_id:str, title:str=None, director:str=None, year:int=None, score:int=None) -> bool:
+        """ Update movie document in DB """
         mongo_manager = MongoManager()
         if not mongo_manager.valid_collection(MONGO_COLLECTION):
             return False
@@ -65,6 +69,7 @@ class MongoManager():
 
     @staticmethod
     def insert_movie(title, director, year, score) -> bool:
+        """ Insert new movie document in DB """
         mongo_manager = MongoManager()
         # not validate any kind of data because could be more than one film with the same title
         data = {
@@ -75,10 +80,11 @@ class MongoManager():
         }
         result = mongo_manager.db[MONGO_COLLECTION].insert_one(data)
         return result.acknowledged
-        
+
 
     @staticmethod
     def delete_movie(_id:str) -> bool:
+        """ Delete movie document from DB """
         mongo_manager = MongoManager()
         data = {'_id': ObjectId(_id)}
         result = mongo_manager.db[MONGO_COLLECTION].delete_one(data)
